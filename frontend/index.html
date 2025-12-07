@@ -1,0 +1,1200 @@
+<!doctype html>
+<html>
+<head>
+  <meta charset="utf-8" />
+  <title>Sarthi — Crypto Trading Terminal</title>
+  <meta name="viewport" content="width=device-width,initial-scale=1" />
+  <style>
+    /* Basic visual theme (light) */
+    :root{
+      --bg: #f7f9fb;
+      --card: #ffffff;
+      --muted: #6b7280;
+      --accent: #1976d2;
+      --accent-contrast: #fff;
+      --border: #e6eef6;
+      --success: #1b9b53;
+      --radius: 10px;
+      --pad: 16px;
+      --gap: 12px;
+    }
+
+    html,body{height:100%}
+    body {
+      font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, "Helvetica Neue", Arial;
+      background:var(--bg); color:#111; margin:0; padding:20px;
+      -webkit-font-smoothing:antialiased;
+    }
+
+    a { color: var(--accent); }
+
+    /* App header */
+    .app-header{
+      display:flex;
+      align-items:center;
+      justify-content:space-between;
+      margin-bottom:18px;
+      gap:8px;
+      flex-wrap:wrap;
+    }
+    .app-title{
+      font-size:1.4rem;
+      font-weight:700;
+      letter-spacing:0.03em;
+    }
+    .app-subtitle{
+      font-size:0.9rem;
+      color:var(--muted);
+    }
+
+    /* Card */
+    .card{ background:var(--card); padding:var(--pad); border-radius:var(--radius);
+      box-shadow:0 1px 8px rgba(20,30,50,0.05); margin-bottom:18px;
+    }
+
+    /* Grid/helpers */
+    .row { display:flex; gap:var(--gap); align-items:center; }
+    .col { display:flex; flex-direction:column; gap:8px; }
+    .flex-1 { flex:1; }
+    .grid { display:grid; gap:var(--gap); }
+    .controls { display:flex; gap:var(--gap); align-items:center; }
+
+    /* Inputs/buttons */
+    label { display:block; font-size:0.9rem; color:var(--muted); margin-bottom:6px; }
+    input, select, button, textarea {
+      font-size:14px; border-radius:8px; padding:10px 12px; border:1px solid var(--border);
+      background:white;
+      box-sizing:border-box;
+    }
+    input:focus, select:focus, textarea:focus { outline: none; box-shadow:0 0 0 3px rgba(25,118,210,0.08); border-color:rgba(25,118,210,0.2); }
+    button { background:var(--accent); color:var(--accent-contrast); border:none; cursor:pointer; padding:10px 14px; border-radius:8px; }
+    button.secondary { background:white; color:var(--accent); border:1px solid var(--accent); }
+    button.ghost { background:transparent; color:var(--muted); border:1px solid transparent; }
+    button.full { width:100%; display:block; }
+
+    .big { font-size:1.2rem; font-weight:600; }
+    .price { font-size:1.6rem; font-weight:700; letter-spacing:0.2px; }
+    .muted { color:var(--muted); }
+    .muted-small { font-size:0.85rem; color:var(--muted); }
+
+    /* Table */
+    table{ width:100%; border-collapse:collapse; margin-top:10px; font-size:14px;}
+    th,td{ padding:10px 8px; border-bottom:1px solid #f1f5f9; text-align:left; vertical-align:middle; }
+    th { color:var(--muted); font-weight:600; font-size:13px; }
+
+    /* Log box */
+    .logbox{ height:200px; overflow:auto; background:#fbfdff; border:1px solid #eef3f9; padding:10px; border-radius:8px; font-family:monospace; font-size:0.9rem; color:#222; }
+
+    /* Friendlier log lines */
+    .log-line{ margin-bottom:4px; padding:2px 4px; border-radius:4px; }
+    .log-time{ color:#9ca3af; margin-right:6px; font-size:0.78rem; }
+    .log-label{ font-weight:600; margin-right:6px; font-size:0.78rem; }
+    .log-message{ white-space:pre-wrap; word-break:break-word; }
+
+    .log-info{ background:#eff6ff; }
+    .log-info .log-label{ color:#2563eb; }
+
+    .log-success{ background:#ecfdf3; }
+    .log-success .log-label{ color:#15803d; }
+
+    .log-error{ background:#fef2f2; }
+    .log-error .log-label{ color:#dc2626; }
+
+    /* Fav chips & status chips */
+    .fav-panel { display:flex; gap:8px; flex-wrap:wrap; margin-top:8px; }
+    .fav-chip { padding:6px 10px; border-radius:999px; background:#fff3e0; color:#b45309; cursor:pointer; border:1px solid #fde6bb; font-weight:600; position:relative; }
+    .fav-chip.selected { background:#e6f7ff; color:var(--accent); border:1px solid #cfeefe; }
+    .fav-remove { position:absolute; right:-6px; top:-6px; background:#fff; border-radius:50%; width:18px; height:18px; display:flex; align-items:center; justify-content:center; font-weight:700; color:#c0392b; border:1px solid #ffdad4; cursor:pointer; font-size:12px; }
+
+    .right { margin-left:auto; }
+    .chip { display:inline-block; padding:6px 10px; border-radius:999px; background:#eef6ff; color:var(--accent); font-weight:600; font-size:0.9rem;}
+    .chip.good{ background:#ecfdf3; color:#15803d; }
+    .chip.bad{ background:#fef2f2; color:#b91c1c; }
+
+    /* Layout specifics */
+    .top-grid { display:grid; grid-template-columns: 1fr 360px; gap:16px; align-items:start; }
+    .controls-grid { display:grid; grid-template-columns: 140px 1fr 140px; gap:12px; align-items:center; }
+
+    /* Order form controls layout */
+    .order-row { display:grid; grid-template-columns: 1fr 90px 110px 140px 120px 120px 140px; gap:12px; align-items:center; }
+    .action-col { display:flex; gap:8px; align-items:center; justify-content:flex-end; }
+
+    /* Table horizontal scroll on narrow screens */
+    .table-wrap { overflow:auto; }
+
+    /* MEDIA QUERIES - improved mobile layout */
+    @media (max-width: 1000px) {
+      .top-grid { grid-template-columns: 1fr; }
+      .controls-grid { grid-template-columns: 1fr 1fr; }
+      .order-row { grid-template-columns: 1fr 90px 100px 140px 120px; }
+    }
+
+    @media (max-width: 760px) {
+      body { padding:14px; }
+      .card { padding:14px; }
+      .controls-grid { grid-template-columns: 1fr; align-items:stretch; }
+      .controls-grid > .col { width:100%; }
+      select, input, button { width:100%; }
+      .top-grid { gap:10px; }
+      .order-row { grid-template-columns: 1fr; gap:10px; }
+      .order-row > div { width:100%; }
+      .action-col, .controls { justify-content:stretch; }
+      .price { font-size:1.3rem; }
+      .logbox { height:160px; }
+      button.full { width:100%; }
+      .fav-panel { justify-content:flex-start; }
+    }
+
+    @media (max-width: 420px) {
+      body { padding:10px; }
+      input, select, button { padding:9px 10px; font-size:13px; }
+      .card { padding:12px; border-radius:8px; }
+      .order-row { gap:8px; }
+      th, td { padding:8px 6px; font-size:13px; }
+    }
+
+    @media (pointer: coarse) {
+      select, button, input { padding:12px 14px; }
+    }
+  </style>
+</head>
+<body>
+
+  <!-- App header / branding -->
+  <div class="app-header">
+    <div>
+      <div class="app-title">Sarthi ⚡</div>
+      <div class="app-subtitle">Crypto Futures Trading Terminal 💹</div>
+    </div>
+    <div class="muted-small">
+      👋 Welcome,&nbsp;<strong id="welcomeName">Trader</strong>!
+    </div>
+  </div>
+
+  <!-- Backend connect -->
+  <div class="card">
+    <div class="top-grid">
+      <div>
+        <label>Backend URL</label>
+        <div style="display:flex;gap:12px;align-items:center;flex-wrap:wrap">
+          <input id="backendUrl" style="min-width:220px;flex:1" value="http://127.0.0.1:8000"/>
+          <button id="btnConnect">🔌 Connect Backend</button>
+          <span id="connStatus" class="muted">Not connected</span>
+        </div>
+        <div class="muted" style="margin-top:8px">
+          💡 Set backend URL then click <strong>Connect</strong>. WebSocket will use your login token automatically.
+        </div>
+
+        <!-- Status chips -->
+        <div class="row" style="margin-top:10px;flex-wrap:wrap;gap:8px;">
+          <span id="authChip" class="chip">🔐 Auth</span>
+          <span id="backendChip" class="chip bad">🔌 Backend: not connected</span>
+        </div>
+      </div>
+
+      <div style="text-align:right;">
+        <div class="muted">Selected backend</div>
+        <div id="selectedBackend" class="muted">—</div>
+      </div>
+    </div>
+  </div>
+
+  <!-- Price controls + Favorites -->
+  <div class="card">
+    <div class="controls-grid" style="align-items:center;">
+      <div class="col">
+        <label>Show prices in</label>
+        <select id="currency">
+          <option value="USD">USD</option>
+        </select>
+      </div>
+
+      <div class="col" style="min-width:200px;">
+        <label>Select security (from CoinDCX)</label>
+        <div style="display:flex;gap:8px;align-items:center">
+          <select id="symbolsDropdown" style="width:100%">
+            <option value="">-- select symbol --</option>
+          </select>
+          <button id="btnToggleFav" title="Add/Remove favorite" class="secondary">⭐ Add to Fav</button>
+        </div>
+
+        <div id="favPanel" class="fav-panel" aria-live="polite"></div>
+      </div>
+
+      <div style="display:flex;flex-direction:column;align-items:flex-start;justify-content:center;">
+        <label>&nbsp;</label>
+        <div style="display:flex;gap:10px;">
+          <button id="btnGetPrice">💲 Get Price</button>
+        </div>
+      </div>
+    </div>
+
+    <div style="display:flex;align-items:center;justify-content:space-between;margin-top:14px;flex-wrap:wrap;gap:12px;">
+      <div>
+        <div class="muted">Current Price</div>
+        <div id="displayPrice" class="price">—</div>
+        <div class="muted-small">📡 Live via WebSocket</div>
+      </div>
+
+      <div class="right">
+        <span class="chip bad" id="wsState">WS: Not connected</span>
+      </div>
+    </div>
+  </div>
+
+  <!-- Order form -->
+  <div class="card">
+    <h3>📝 Order Form (Local queue)</h3>
+
+    <!-- Available INR margin display -->
+    <div class="row" style="margin:4px 0 10px 0;flex-wrap:wrap;">
+      <div class="muted-small">
+        💰 Available <strong>INR Futures Margin</strong> (from CoinDCX):
+        <span id="balanceValue" style="font-weight:600;color:#111;">—</span>
+      </div>
+      <button id="btnRefreshBalance" class="secondary" style="padding:4px 10px;font-size:12px;">
+        🔄 Refresh Balance
+      </button>
+    </div>
+
+    <!-- Risk per trade -->
+    <div class="row" style="margin:4px 0 12px 0;flex-wrap:wrap;">
+      <div class="col" style="max-width:220px;">
+        <label>🎯 Risk per trade (INR)</label>
+        <input id="riskInput" type="number" placeholder="e.g. 200" />
+      </div>
+      <button id="btnSaveRisk" class="secondary" style="margin-top:18px;">💾 Save Risk</button>
+      <div class="muted-small" style="margin-top:18px;">
+        Current Risk: <span id="riskDisplay">Not set</span>
+      </div>
+    </div>
+
+    <div class="order-row" style="margin-top:6px;">
+      <div>
+        <label>Symbol</label>
+        <select id="orderSymbol" style="width:100%"><option value="">-- select symbol --</option></select>
+      </div>
+
+      <div>
+        <label>⚙️ Leverage</label>
+        <input id="leverage" type="number" value="1" min="1" max="100" />
+      </div>
+
+      <div>
+        <label>Side</label>
+        <select id="side"><option>BUY</option><option>SELL</option></select>
+      </div>
+
+      <div>
+        <label>🛑 SL (only for qty calc)</label>
+        <input id="sl" type="number" placeholder="e.g. 10" />
+      </div>
+
+      <div>
+        <label>Qty (calculated)</label>
+        <input id="qty" readonly />
+      </div>
+
+      <div>
+        <label>Margin (view)</label>
+        <input id="margin" readonly />
+      </div>
+
+      <div>
+        <label>Order Type</label>
+        <select id="orderType"><option value="market">Market</option><option value="limit">Limit</option></select>
+      </div>
+
+      <div style="display:flex;align-items:center;gap:8px;margin-top:6px;">
+        <input id="limitPrice" placeholder="Limit price" style="width:140px" />
+        <button id="btnAddOrder" style="min-width:110px;margin-left:8px">➕ Add Order</button>
+        <button id="btnCancelEdit" class="secondary" style="display:none;margin-left:6px">✖ Cancel Edit</button>
+      </div>
+    </div>
+
+    <div style="margin-top:8px" class="muted">
+      💡 Qty formula: <strong>Risk * 100 / SL</strong> — Risk is user-defined; SL is only used to compute QTY, not saved to the order payload.
+    </div>
+
+    <div style="display:flex;gap:8px;align-items:center;margin-top:12px;flex-wrap:wrap;">
+      <button id="btnPlaceSelected">🚀 Place Selected Orders</button>
+      <button id="btnPlaceAll" class="secondary">⚡ Place All Orders</button>
+      <button id="btnClearQueue" class="secondary">🧹 Clear Queue</button>
+    </div>
+
+    <div class="table-wrap" style="margin-top:12px">
+      <table id="ordersTable" aria-label="Order queue">
+        <thead>
+          <tr>
+            <th style="width:36px"><input id="chkAll" type="checkbox" /></th>
+            <th>Symbol</th><th>Side</th><th>Leverage</th><th>Qty</th><th>Margin</th><th>Limit</th><th>Action</th>
+          </tr>
+        </thead>
+        <tbody></tbody>
+      </table>
+    </div>
+  </div>
+
+  <!-- Executed orders -->
+  <div class="card">
+    <h3>✅ Executed Orders</h3>
+    <div class="table-wrap">
+      <table id="executedTable" aria-label="Executed orders">
+        <thead>
+          <tr>
+            <th>#</th>
+            <th>Symbol</th>
+            <th>Side</th>
+            <th>Leverage</th>
+            <th>Qty</th>
+            <th>Limit</th>
+            <th>Type</th>
+            <th>Executed At</th>
+          </tr>
+        </thead>
+        <tbody></tbody>
+      </table>
+    </div>
+  </div>
+
+  <!-- Logs -->
+  <div class="card">
+    <h3>📜 Response / Logs</h3>
+    <div class="muted-small" style="margin-bottom:6px;">
+      ℹ️ Green = success, Red = error, Blue = info.
+    </div>
+    <div id="log" class="logbox"></div>
+  </div>
+
+<script>
+(function(){
+
+// --- Authentication check ---
+function checkAuth() {
+    const token = localStorage.getItem('access_token');
+    if (!token) {
+        window.location.href = '/login.html';
+        return false;
+    }
+    return true;
+}
+
+// Authenticated API calls
+async function fetchWithAuth(url, options = {}) {
+    const token = localStorage.getItem('access_token');
+    options.headers = {
+        ...options.headers,
+        'Authorization': `Bearer ${token}`
+    };
+    const response = await fetch(url, options);
+    
+    if (response.status === 401) {
+        localStorage.clear();
+        window.location.href = '/login.html';
+    }
+    
+    return response;
+}
+
+if (!checkAuth()) {
+    return;
+}
+
+  // State
+  let backend = "";
+  let ws = null;
+  let subs = new Set();
+  let tickerPrices = {};
+  let orders = [];
+  let favs = [];
+  let editingIndex = null;
+  let executedOrders = [];
+  let currentRisk = null; // risk per trade (INR)
+
+  // DOM
+  const backendEl = document.getElementById("backendUrl");
+  const btnConnect = document.getElementById("btnConnect");
+  const connStatus = document.getElementById("connStatus");
+  const selectedBackend = document.getElementById("selectedBackend");
+  const symbolsDropdown = document.getElementById("symbolsDropdown");
+  const orderSymbol = document.getElementById("orderSymbol");
+  const btnGetPrice = document.getElementById("btnGetPrice");
+  const displayPrice = document.getElementById("displayPrice");
+  const logEl = document.getElementById("log");
+  const btnAddOrder = document.getElementById("btnAddOrder");
+  const btnCancelEdit = document.getElementById("btnCancelEdit");
+  const leverageEl = document.getElementById("leverage");
+  const slEl = document.getElementById("sl");
+  const qtyEl = document.getElementById("qty");
+  const marginEl = document.getElementById("margin");
+  const orderTypeEl = document.getElementById("orderType");
+  const limitPriceEl = document.getElementById("limitPrice");
+  const ordersTableBody = document.querySelector("#ordersTable tbody");
+  const btnPlaceSelected = document.getElementById("btnPlaceSelected");
+  const btnPlaceAll = document.getElementById("btnPlaceAll");
+  const btnClearQueue = document.getElementById("btnClearQueue");
+  const chkAll = document.getElementById("chkAll");
+  const wsState = document.getElementById("wsState");
+  const favPanel = document.getElementById("favPanel");
+  const btnToggleFav = document.getElementById("btnToggleFav");
+  const executedTableBody = document.querySelector("#executedTable tbody");
+  const welcomeNameSpan = document.getElementById("welcomeName");
+  const authChip = document.getElementById("authChip");
+  const backendChip = document.getElementById("backendChip");
+
+  // Risk elements
+  const riskInput = document.getElementById("riskInput");
+  const btnSaveRisk = document.getElementById("btnSaveRisk");
+  const riskDisplay = document.getElementById("riskDisplay");
+
+  // Balance DOM
+  const balanceValue = document.getElementById("balanceValue");
+  const btnRefreshBalance = document.getElementById("btnRefreshBalance");
+
+  // ------ Friendly log helper ------
+  function log(...args){
+    const ts = new Date().toLocaleTimeString();
+    const message = args.map(a =>
+      typeof a === "object" ? JSON.stringify(a, null, 2) : String(a)
+    ).join(" ");
+
+    let type = "info";
+    const lower = message.toLowerCase();
+    if (lower.includes("error") || lower.includes("failed")) {
+      type = "error";
+    } else if (lower.includes("saved") || lower.includes("connected") || lower.includes("executed") || lower.includes("cleared")) {
+      type = "success";
+    }
+
+    const labelText = type === "error" ? "ERROR" : (type === "success" ? "SUCCESS" : "INFO");
+    const emoji = type === "error" ? "❌" : (type === "success" ? "✅" : "ℹ️");
+
+    const html =
+      `<div class="log-line log-${type}">
+         <span class="log-time">${ts}</span>
+         <span class="log-label">${emoji} ${labelText}</span>
+         <span class="log-message">${message}</span>
+       </div>`;
+
+    logEl.insertAdjacentHTML("afterbegin", html);
+    console.log(...args);
+  }
+
+  function setConnected(url){
+    backend = url;
+    selectedBackend.innerText = url;
+    connStatus.innerHTML = '<span style="color:green">Connected (WS)</span>';
+    wsState.innerText = 'WS: Connected';
+    wsState.classList.remove("bad");
+    wsState.classList.add("good");
+    if (backendChip) {
+      backendChip.textContent = "🔌 Backend: connected";
+      backendChip.classList.remove("bad");
+      backendChip.classList.add("good");
+    }
+    fetchBalanceUI("INR");
+  }
+
+  // ---- Show username in header ----
+  function getDisplayNameFromStorage(){
+    try {
+      const rawUser = localStorage.getItem("user");
+      if (rawUser) {
+        const u = JSON.parse(rawUser);
+        return u.name || u.username || u.full_name || u.email || null;
+      }
+    } catch(e){}
+
+    const token = localStorage.getItem("access_token");
+    if (!token) return null;
+    const parts = token.split(".");
+    if (parts.length !== 3) return null;
+    try {
+      const payloadJson = atob(parts[1].replace(/-/g, "+").replace(/_/g, "/"));
+      const payload = JSON.parse(payloadJson);
+      return payload.name || payload.username || payload.email || payload.sub || null;
+    } catch(e){
+      return null;
+    }
+  }
+
+  const displayName = getDisplayNameFromStorage() || "Trader";
+  if (welcomeNameSpan) {
+    welcomeNameSpan.textContent = displayName;
+  }
+  if (authChip) {
+    authChip.textContent = "🔐 Logged in";
+    authChip.classList.add("good");
+  }
+  if (backendChip) {
+    backendChip.textContent = "🔌 Backend: not connected";
+    backendChip.classList.add("bad");
+  }
+
+  // ---- Risk persistence ----
+  const RISK_KEY = "sarthi_risk_value_v1";
+
+  function updateRiskUI(){
+    if(currentRisk && currentRisk > 0){
+      riskDisplay.innerText = currentRisk.toFixed(2) + " INR";
+    } else {
+      riskDisplay.innerText = "Not set";
+    }
+  }
+
+  function loadRisk(){
+    try{
+      const raw = localStorage.getItem(RISK_KEY);
+      if(!raw) return;
+      const val = parseFloat(raw);
+      if(val && val > 0){
+        currentRisk = val;
+        riskInput.value = String(val);
+      }
+    }catch(e){}
+    updateRiskUI();
+  }
+
+  function saveRisk(val){
+    currentRisk = val;
+    try{
+      localStorage.setItem(RISK_KEY, String(val));
+    }catch(e){}
+    updateRiskUI();
+    log("Risk per trade saved:", val + " INR");
+  }
+
+  btnSaveRisk.addEventListener("click", () => {
+    const v = parseFloat(riskInput.value);
+    if(!v || v <= 0){
+      alert("Enter a valid Risk per trade (INR) > 0");
+      return;
+    }
+    saveRisk(v);
+  });
+
+  // --- fetch balance ---
+  async function fetchBalanceUI(currency){
+    if(!backend) return;
+    const cur = (currency || "INR").toUpperCase();
+    balanceValue.innerText = "Loading...";
+    try{
+      const resp = await fetchWithAuth(`${backend}/trade/balance?currency=${encodeURIComponent(cur)}`);
+      if(!resp.ok){
+        balanceValue.innerText = "N/A";
+        log("Balance fetch failed. HTTP status:", resp.status);
+        return;
+      }
+      const data = await resp.json();
+      if(data && typeof data.balance !== "undefined"){
+        const bal = Number(data.balance || 0);
+        const ccy = (data.currency || cur).toUpperCase();
+        balanceValue.innerText = `${bal.toFixed(2)} ${ccy}`;
+      } else if(Array.isArray(data.balances)){
+        const entry = data.balances.find(b => (b.currency || "").toUpperCase() === cur);
+        const bal = entry ? Number(entry.balance || 0) : 0;
+        balanceValue.innerText = `${bal.toFixed(2)} ${cur}`;
+      } else {
+        balanceValue.innerText = "N/A";
+      }
+      log("Balance updated from CoinDCX:", data);
+    }catch(err){
+      balanceValue.innerText = "N/A";
+      log("Balance fetch error:", err.message || err);
+    }
+  }
+
+  if(btnRefreshBalance){
+    btnRefreshBalance.addEventListener("click", () => {
+      if(!backend) return alert("Connect backend first");
+      fetchBalanceUI("INR");
+    });
+  }
+
+  async function fetchSymbols(){
+    if(!backend) return;
+    try{
+      const cur = document.getElementById("currency").value || "USD";
+      const resp = await fetchWithAuth(`${backend}/trade/securities?currency=${encodeURIComponent(cur)}`);
+      if(!resp.ok) throw new Error("HTTP " + resp.status);
+      const data = await resp.json();
+      const syms = Array.isArray(data) ? data : (data.symbols || data);
+      const normalized = syms.map(s => s.toUpperCase()).filter(Boolean);
+      populateSymbols(normalized);
+      log("Securities list loaded. Symbols:", normalized.length);
+    }catch(err){
+      log("Securities fetch failed:", err.message || err);
+    }
+  }
+
+  function populateSymbols(arr){
+    const unique = Array.from(new Set(arr)).sort();
+    symbolsDropdown.innerHTML = '<option value="">-- select symbol --</option>';
+    orderSymbol.innerHTML = '<option value="">-- select symbol --</option>';
+    unique.forEach(s => {
+      const opt = document.createElement("option");
+      opt.value = s;
+      opt.innerText = s;
+      symbolsDropdown.appendChild(opt);
+      orderSymbol.appendChild(opt.cloneNode(true));
+    });
+    renderFavs();
+  }
+
+  // ---------- Favorites ----------
+  const FAV_KEY = "favSymbols_v1";
+
+  function loadFavs(){
+    try{
+      const raw = localStorage.getItem(FAV_KEY);
+      favs = raw ? JSON.parse(raw) : [];
+    }catch(e){
+      favs = [];
+    }
+    favs = Array.from(new Set((favs||[]).map(s => (s||"").toUpperCase())));
+  }
+
+  function saveFavs(){
+    try{ localStorage.setItem(FAV_KEY, JSON.stringify(favs)); }catch(e){}
+  }
+
+  function renderFavs(){
+    favPanel.innerHTML = "";
+    if(!favs || favs.length === 0){
+      favPanel.innerHTML = '<div class="muted">No favorites yet. ⭐ Use "Add to Fav" to pin a symbol.</div>';
+      btnToggleFav.innerText = "⭐ Add to Fav";
+      return;
+    }
+    favs.forEach(sym => {
+      const chip = document.createElement("div");
+      chip.className = "fav-chip";
+      chip.innerText = sym;
+      chip.title = "Click to select in form";
+
+      chip.addEventListener("click", () => {
+        symbolsDropdown.value = sym;
+        orderSymbol.value = sym;
+        const p = tickerPrices[sym];
+        displayPrice.innerText = p ? Number(p).toLocaleString() : "N/A";
+        updateFavToggleUI();
+      });
+
+      const rem = document.createElement("div");
+      rem.className = "fav-remove";
+      rem.innerText = "×";
+      rem.title = "Remove favorite";
+      rem.addEventListener("click", (ev) => {
+        ev.stopPropagation();
+        if(!confirm(`Remove ${sym} from favorites?`)) return;
+        removeFav(sym);
+      });
+
+      chip.appendChild(rem);
+      favPanel.appendChild(chip);
+    });
+    updateFavToggleUI();
+  }
+
+  function isFav(sym){
+    if(!sym) return false;
+    return favs.includes(sym.toUpperCase());
+  }
+
+  function addFav(sym){
+    if(!sym) return;
+    sym = sym.toUpperCase();
+    if(!favs.includes(sym)){
+      favs.unshift(sym);
+      if(favs.length > 50) favs = favs.slice(0,50);
+      saveFavs();
+      renderFavs();
+      log("Added to favourites:", sym);
+    }
+    updateFavToggleUI();
+  }
+
+  function removeFav(sym){
+    if(!sym) return;
+    sym = sym.toUpperCase();
+    favs = favs.filter(s => s !== sym);
+    saveFavs();
+    renderFavs();
+    log("Removed from favourites:", sym);
+    updateFavToggleUI();
+  }
+
+  function updateFavToggleUI(){
+    const sel = (symbolsDropdown.value || "").toUpperCase();
+    if(sel && isFav(sel)){
+      btnToggleFav.innerText = "⭐ Remove Fav";
+      btnToggleFav.classList.remove("secondary");
+    } else {
+      btnToggleFav.innerText = "⭐ Add to Fav";
+      btnToggleFav.classList.add("secondary");
+    }
+  }
+
+  btnToggleFav.addEventListener("click", () => {
+    const sym = (symbolsDropdown.value || "").toUpperCase();
+    if(!sym) return alert("Select a symbol to add/remove from favorites");
+    if(isFav(sym)) removeFav(sym);
+    else addFav(sym);
+  });
+
+  symbolsDropdown.addEventListener("change", () => {
+    updateFavToggleUI();
+    const v = symbolsDropdown.value || "";
+    if(v) orderSymbol.value = v;
+  });
+
+  orderSymbol.addEventListener("change", () => {
+    const v = orderSymbol.value || "";
+    if(v) symbolsDropdown.value = v;
+    updateFavToggleUI();
+  });
+
+  // ---------- WebSocket + ticker ----------
+  function connectWS(url){
+    if(ws) {
+      try { ws.close(); } catch(e){}
+    }
+
+    const token = localStorage.getItem("access_token");
+    if (!token) {
+      alert("Not authenticated. Please login again.");
+      window.location.href = "/login.html";
+      return;
+    }
+
+    const wsUrl = url.replace(/^http/, "ws") + `/trade/ws/price?token=${encodeURIComponent(token)}`;
+    log("Connecting price WebSocket to backend…");
+    try {
+      ws = new WebSocket(wsUrl);
+    } catch(e){
+      log("WebSocket connection error:", e);
+      return;
+    }
+
+    ws.addEventListener("open", () => {
+      log("WebSocket connected. Live prices ready. 📡");
+      setConnected(url);
+      fetchSymbols();
+    });
+
+    ws.addEventListener("message", (ev) => {
+      try {
+        const msg = JSON.parse(ev.data);
+        if(msg.type === "price" && msg.data){
+          const {symbol, price} = msg.data;
+          if(!symbol) return;
+          tickerPrices[symbol.toUpperCase()] = price;
+          const sel = (symbolsDropdown.value || "").toUpperCase();
+          if(sel && sel === symbol.toUpperCase()){
+            displayPrice.innerText = Number(price).toLocaleString();
+          }
+        }
+      } catch(e){
+        console.error("WS msg parse", e);
+      }
+    });
+
+    ws.addEventListener("error", (e) => {
+      log("WebSocket error. Check backend logs for details.");
+      console.error(e);
+    });
+
+    ws.addEventListener("close", (e) => {
+      log("WebSocket connection closed.");
+      connStatus.innerHTML = '<span style="color:crimson">Not connected</span>';
+      wsState.innerText = 'WS: Not connected';
+      wsState.classList.remove("good");
+      wsState.classList.add("bad");
+      if (backendChip) {
+        backendChip.textContent = "🔌 Backend: not connected";
+        backendChip.classList.remove("good");
+        backendChip.classList.add("bad");
+      }
+    });
+  }
+
+  function wsSubscribe(symbol){
+    if(!ws || ws.readyState !== WebSocket.OPEN) {
+      log("Cannot subscribe: WebSocket not connected.");
+      return;
+    }
+    symbol = symbol.toUpperCase();
+    try {
+      ws.send(JSON.stringify({action:"subscribe", symbol}));
+      subs.add(symbol);
+      log("Subscribed to live price:", symbol);
+    } catch(e){
+      log("WebSocket subscribe error:", e);
+    }
+  }
+
+  function wsUnsubscribe(symbol){
+    if(!ws || ws.readyState !== WebSocket.OPEN) return;
+    symbol = symbol.toUpperCase();
+    try {
+      ws.send(JSON.stringify({action:"unsubscribe", symbol}));
+      subs.delete(symbol);
+      log("Unsubscribed from live price:", symbol);
+    } catch(e){
+      log("WebSocket unsubscribe error:", e);
+    }
+  }
+
+  btnConnect.addEventListener("click", async () => {
+    const url = backendEl.value.trim();
+    if(!url) return alert("Enter backend URL");
+    try{
+      connectWS(url);
+      setTimeout(fetchSymbols, 600);
+    }catch(e){
+      log("Backend connect failed:", e);
+    }
+  });
+
+  btnGetPrice.addEventListener("click", async () => {
+    const symbol = (symbolsDropdown.value || "").toUpperCase();
+    if(!symbol) return alert("Pick symbol first");
+    subs.forEach(s => { if(s !== symbol) wsUnsubscribe(s); });
+    wsSubscribe(symbol);
+    const p = tickerPrices[symbol];
+    displayPrice.innerText = p ? Number(p).toLocaleString() : "N/A";
+  });
+
+  // ---------- Qty / Margin (Risk-based) ----------
+  function computeQtyAndMargin(){
+    const sl = parseFloat(slEl.value);
+    if(!sl || sl <= 0) {
+      qtyEl.value = "";
+      marginEl.value = "";
+      return;
+    }
+    if(!currentRisk || currentRisk <= 0){
+      qtyEl.value = "";
+      marginEl.value = "";
+      return;
+    }
+    const qty = (currentRisk * 100) / sl;
+    qtyEl.value = Number(qty).toFixed(4);
+
+    const lev = parseFloat(leverageEl.value) || 1;
+    const margin = qty / lev;
+    marginEl.value = Number(margin).toFixed(6);
+    return { qty: Number(qty), margin: Number(margin) };
+  }
+
+  slEl.addEventListener("input", computeQtyAndMargin);
+  leverageEl.addEventListener("input", computeQtyAndMargin);
+
+  // ---------- Orders queue UI ----------
+  const ordersTableBodyRef = ordersTableBody;
+
+  function renderOrders(){
+    ordersTableBodyRef.innerHTML = "";
+    orders.forEach((o, idx) => {
+      const tr = document.createElement("tr");
+      const checkedHtml = `<input type="checkbox" data-idx="${idx}" class="rowChk" />`;
+      const limitText = (o.limit_price === null || o.limit_price === undefined) ? "" : o.limit_price;
+      const marginText = (o.margin === null || o.margin === undefined) ? "" : Number(o.margin).toFixed(6);
+      tr.innerHTML = `<td>${checkedHtml}</td>
+        <td>${o.symbol}</td><td>${o.side}</td><td>${o.leverage}</td>
+        <td>${Number(o.qty).toFixed(4)}</td><td>${marginText}</td><td>${limitText}</td>
+        <td>
+          <button data-idx="${idx}" class="btnEdit">✏️ Edit</button>
+          <button data-idx="${idx}" class="btnRemove">🗑 Remove</button>
+        </td>`;
+      ordersTableBodyRef.appendChild(tr);
+    });
+    ordersTableBodyRef.querySelectorAll(".btnRemove").forEach(b => {
+      b.addEventListener("click", (ev) => {
+        const i = parseInt(ev.target.dataset.idx, 10);
+        orders.splice(i,1);
+        if(editingIndex === i) cancelEdit();
+        if(editingIndex !== null && editingIndex > i) editingIndex--;
+        renderOrders();
+      });
+    });
+    ordersTableBodyRef.querySelectorAll(".btnEdit").forEach(b => {
+      b.addEventListener("click", (ev) => {
+        const i = parseInt(ev.target.dataset.idx, 10);
+        startEdit(i);
+      });
+    });
+    ordersTableBodyRef.querySelectorAll(".rowChk").forEach(cb => {
+      cb.addEventListener("change", () => {});
+    });
+    chkAll.checked = false;
+  }
+
+  function renderExecutedOrders(){
+    if(!executedTableBody) return;
+    executedTableBody.innerHTML = "";
+    executedOrders.forEach((o, idx) => {
+      const tr = document.createElement("tr");
+      const priceText = (o.limit_price === null || o.limit_price === undefined) ? "" : o.limit_price;
+      const qtyText = (o.qty !== undefined && o.qty !== null) ? Number(o.qty).toFixed(4) : "";
+      tr.innerHTML = `
+        <td>${idx + 1}</td>
+        <td>${o.symbol || ""}</td>
+        <td>${o.side || ""}</td>
+        <td>${o.leverage || ""}</td>
+        <td>${qtyText}</td>
+        <td>${priceText}</td>
+        <td>${o.order_type || ""}</td>
+        <td>${o._executedAt || ""}</td>
+      `;
+      executedTableBody.appendChild(tr);
+    });
+  }
+
+  async function postOrderToBackend(o){
+    try{
+      const resp = await fetchWithAuth(`${backend}/trade/orders`, {
+        method: "POST",
+        headers: {"Content-Type":"application/json"},
+        body: JSON.stringify(o)
+      });
+      if(!resp.ok){
+        const txt = await resp.text();
+        log("Order could not be stored on backend:", resp.status, txt);
+        return null;
+      } else {
+        const data = await resp.json();
+        return data.order || data;
+      }
+    }catch(e){
+      log("Order POST error:", e);
+      return null;
+    }
+  }
+
+  btnAddOrder.addEventListener("click", async () => {
+    const isEdit = editingIndex !== null;
+    const symbol = (orderSymbol.value || "").toUpperCase();
+    if(!symbol) return alert("Pick a symbol for the order");
+    const leverage = parseInt(leverageEl.value) || 1;
+    const side = (document.getElementById("side").value || "BUY");
+    const sl = parseFloat(slEl.value);
+    if(!sl || sl <= 0) return alert("Enter SL (stop loss) > 0 to compute qty");
+    if(!currentRisk || currentRisk <= 0) return alert("Please set and save Risk per trade first");
+    const computed = computeQtyAndMargin();
+    if(!computed) return alert("Qty calculation invalid");
+    const qty = computed.qty;
+    const order_type = orderTypeEl.value;
+    let limit_price = null;
+    if(order_type === "limit"){
+      const v = parseFloat(limitPriceEl.value);
+      if(!v || isNaN(v)) return alert("Limit price required for limit orders");
+      limit_price = v;
+    }
+    const margin = computed.margin;
+    const payload = { symbol, qty, leverage, side, order_type, limit_price, margin };
+
+    if(isEdit){
+      const old = orders[editingIndex] || {};
+      const updated = Object.assign({}, old, payload);
+      updated.sl = undefined;
+      orders[editingIndex] = updated;
+      if(updated.id){
+        try{
+          const resp = await fetchWithAuth(`${backend}/trade/orders/${updated.id}`, {
+            method: "PUT",
+            headers: {"Content-Type":"application/json"},
+            body: JSON.stringify(updated)
+          });
+          if(!resp.ok) log("Backend update returned status:", resp.status);
+          else {
+            const d = await resp.json();
+            orders[editingIndex] = d.order || updated;
+          }
+        }catch(e){
+          log("Backend update failed (kept local copy):", e.message || e);
+        }
+      }
+      cancelEdit();
+      renderOrders();
+      log("Order updated in queue:", updated);
+    } else {
+      const saved = await postOrderToBackend(payload);
+      if(saved){
+        saved.margin = saved.margin ?? margin;
+        orders.push(saved);
+        renderOrders();
+        log("Order saved in queue with id:", saved.id);
+      } else {
+        payload.id = null;
+        orders.push(payload);
+        renderOrders();
+        log("Order added to local queue only (backend save failed).");
+      }
+    }
+  });
+
+  function startEdit(index){
+    if(index === null || index === undefined) return;
+    const o = orders[index];
+    if(!o) return;
+    editingIndex = index;
+    orderSymbol.value = o.symbol || "";
+    symbolsDropdown.value = o.symbol || "";
+    leverageEl.value = o.leverage || 1;
+    document.getElementById("side").value = o.side || "BUY";
+    slEl.value = "";
+    qtyEl.value = Number(o.qty || 0).toFixed(4);
+    marginEl.value = (o.margin !== undefined && o.margin !== null) ? Number(o.margin).toFixed(6) : "";
+    orderTypeEl.value = o.order_type || "market";
+    limitPriceEl.value = o.limit_price ?? "";
+    btnAddOrder.innerText = "💾 Save Changes";
+    btnCancelEdit.style.display = "inline-block";
+    log("Editing order in queue. Row index:", index);
+    window.scrollTo({ top: 0, behavior: "smooth" });
+  }
+
+  function cancelEdit(){
+    editingIndex = null;
+    btnAddOrder.innerText = "➕ Add Order";
+    btnCancelEdit.style.display = "none";
+    slEl.value = "";
+    qtyEl.value = "";
+    marginEl.value = "";
+  }
+  btnCancelEdit.addEventListener("click", () => {
+    if(!confirm("Cancel edit?")) return;
+    cancelEdit();
+  });
+
+  chkAll.addEventListener("change", () => {
+    const chks = ordersTableBodyRef.querySelectorAll(".rowChk");
+    chks.forEach(c => { c.checked = chkAll.checked; });
+  });
+
+  async function gatherSelectedIds(){
+    const chks = Array.from(ordersTableBodyRef.querySelectorAll(".rowChk"));
+    const selectedIdx = chks.map((c, i) => c.checked ? parseInt(c.dataset.idx, 10) : -1).filter(i => i >= 0);
+    if(selectedIdx.length === 0) return [];
+    const ids = [];
+    for(const idx of selectedIdx){
+      const o = orders[idx];
+      if(!o) continue;
+      if(!o.id){
+        const saved = await postOrderToBackend({
+          symbol: o.symbol, qty: o.qty, leverage: o.leverage, side: o.side,
+          order_type: o.order_type, limit_price: o.limit_price, margin: o.margin
+        });
+        if(saved && saved.id){
+          orders[idx] = saved;
+        } else {
+          log("Could not store order on backend, skipping execution. Row:", idx);
+          continue;
+        }
+      }
+      ids.push(orders[idx].id);
+    }
+    return ids;
+  }
+
+  async function placeOrdersByIds(ids){
+    if(!ids || ids.length === 0) return;
+    try{
+      const resp = await fetchWithAuth(`${backend}/trade/orders/execute`, {
+        method: "POST",
+        headers: {"Content-Type":"application/json"},
+        body: JSON.stringify({ ids })
+      });
+      if(!resp.ok){
+        const txt = await resp.text();
+        log("Execute call failed. HTTP status:", resp.status, txt);
+        return;
+      }
+      const data = await resp.json();
+
+      const executed = data.executed || [];
+      const executedIds = new Set(executed.map(o => o.id));
+      orders = orders.filter(o => !executedIds.has(o.id));
+      renderOrders();
+
+      if(executed.length){
+        const ts = new Date().toLocaleTimeString();
+        executed.forEach(o => {
+          const copy = Object.assign({}, o);
+          copy._executedAt = ts;
+          executedOrders.unshift(copy);
+        });
+        if(executedOrders.length > 100) executedOrders = executedOrders.slice(0,100);
+        renderExecutedOrders();
+        log("Orders executed on CoinDCX. IDs:", executed.map(o=>o.id));
+      }
+
+      if(data.failed && data.failed.length){
+        log("Some orders failed to execute:", data.failed);
+      }
+      if(Array.isArray(data.debug)){
+        data.debug.forEach(d => {
+          log("Order execution debug:", d);
+        });
+      }
+
+      fetchBalanceUI("INR");
+    }catch(e){
+      log("Execute network error:", e);
+    }
+  }
+
+  btnPlaceSelected.addEventListener("click", async () => {
+    if(orders.length === 0) return alert("Queue is empty");
+    const ids = await gatherSelectedIds();
+    if(ids.length === 0) return alert("No selected orders with valid server id to place");
+    await placeOrdersByIds(ids);
+  });
+
+  btnPlaceAll.addEventListener("click", async () => {
+    if(orders.length === 0) return alert("Queue is empty");
+    const ids = [];
+    for(let i=0;i<orders.length;i++){
+      const o = orders[i];
+      if(!o.id){
+        const saved = await postOrderToBackend({
+          symbol: o.symbol, qty: o.qty, leverage: o.leverage, side: o.side,
+          order_type: o.order_type, limit_price: o.limit_price, margin: o.margin
+        });
+        if(saved && saved.id){
+          orders[i] = saved;
+        } else {
+          log("Failed to persist order before placing. Row skipped:", i);
+          continue;
+        }
+      }
+      ids.push(orders[i].id);
+    }
+    if(ids.length === 0) return alert("No orders available to place");
+    await placeOrdersByIds(ids);
+  });
+
+  btnClearQueue.addEventListener("click", () => {
+    if(!confirm("Clear local order queue?")) return;
+    orders = [];
+    renderOrders();
+    log("Order queue cleared.");
+  });
+
+  (function initFavs(){
+    loadFavs();
+    renderFavs();
+  })();
+
+  (function initRisk(){
+    loadRisk();
+  })();
+
+  (function init(){
+    log(`Welcome ${displayName}! 🎉 UI loaded. Connect the backend and choose a symbol to begin.`);
+  })();
+
+  window._debug = { fetchSymbols, orders, favs, addFav, removeFav, startEdit, cancelEdit, fetchBalanceUI, executedOrders, currentRisk };
+})();
+</script>
+</body>
+</html>

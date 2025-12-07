@@ -1,0 +1,398 @@
+<!doctype html>
+<html>
+<head>
+  <meta charset="utf-8" />
+  <title>Saarthi - Login</title>
+  <meta name="viewport" content="width=device-width,initial-scale=1" />
+  <style>
+    * { box-sizing: border-box; margin: 0; padding: 0; }
+    
+    body {
+      font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif;
+      background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+      min-height: 100vh;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      padding: 20px;
+    }
+    
+    .container {
+      background: white;
+      border-radius: 16px;
+      box-shadow: 0 20px 60px rgba(0,0,0,0.3);
+      width: 100%;
+      max-width: 440px;
+      padding: 40px;
+    }
+    
+    .logo {
+      text-align: center;
+      margin-bottom: 30px;
+    }
+    
+    .logo h1 {
+      font-size: 2rem;
+      color: #667eea;
+      margin-bottom: 8px;
+    }
+    
+    .logo p {
+      color: #6b7280;
+      font-size: 0.9rem;
+    }
+    
+    .tabs {
+      display: flex;
+      gap: 8px;
+      margin-bottom: 30px;
+      border-bottom: 2px solid #e5e7eb;
+    }
+    
+    .tab {
+      flex: 1;
+      padding: 12px;
+      border: none;
+      background: none;
+      cursor: pointer;
+      font-size: 1rem;
+      font-weight: 600;
+      color: #6b7280;
+      border-bottom: 3px solid transparent;
+      transition: all 0.3s;
+    }
+    
+    .tab.active {
+      color: #667eea;
+      border-bottom-color: #667eea;
+    }
+    
+    .form {
+      display: none;
+    }
+    
+    .form.active {
+      display: block;
+    }
+    
+    .field {
+      margin-bottom: 20px;
+    }
+    
+    label {
+      display: block;
+      font-size: 0.9rem;
+      font-weight: 600;
+      color: #374151;
+      margin-bottom: 8px;
+    }
+    
+    input {
+      width: 100%;
+      padding: 12px 16px;
+      border: 2px solid #e5e7eb;
+      border-radius: 8px;
+      font-size: 1rem;
+      transition: border-color 0.3s;
+    }
+    
+    input:focus {
+      outline: none;
+      border-color: #667eea;
+    }
+    
+    .btn {
+      width: 100%;
+      padding: 14px;
+      border: none;
+      border-radius: 8px;
+      font-size: 1rem;
+      font-weight: 600;
+      cursor: pointer;
+      transition: all 0.3s;
+      margin-top: 10px;
+    }
+    
+    .btn-primary {
+      background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+      color: white;
+    }
+    
+    .btn-primary:hover {
+      transform: translateY(-2px);
+      box-shadow: 0 10px 20px rgba(102, 126, 234, 0.3);
+    }
+    
+    .btn-primary:disabled {
+      opacity: 0.6;
+      cursor: not-allowed;
+      transform: none;
+    }
+    
+    .alert {
+      padding: 12px 16px;
+      border-radius: 8px;
+      margin-bottom: 20px;
+      font-size: 0.9rem;
+    }
+    
+    .alert-error {
+      background: #fee2e2;
+      color: #dc2626;
+      border: 1px solid #fecaca;
+    }
+    
+    .alert-success {
+      background: #d1fae5;
+      color: #059669;
+      border: 1px solid #a7f3d0;
+    }
+    
+    .hidden {
+      display: none;
+    }
+    
+    .loading {
+      text-align: center;
+      padding: 20px;
+    }
+    
+    .spinner {
+      border: 3px solid #f3f4f6;
+      border-top: 3px solid #667eea;
+      border-radius: 50%;
+      width: 40px;
+      height: 40px;
+      animation: spin 1s linear infinite;
+      margin: 0 auto;
+    }
+    
+    @keyframes spin {
+      0% { transform: rotate(0deg); }
+      100% { transform: rotate(360deg); }
+    }
+    
+    .footer {
+      text-align: center;
+      margin-top: 24px;
+      color: #6b7280;
+      font-size: 0.85rem;
+    }
+    
+    @media (max-width: 480px) {
+      .container {
+        padding: 30px 24px;
+      }
+      
+      .logo h1 {
+        font-size: 1.6rem;
+      }
+    }
+  </style>
+</head>
+<body>
+  <div class="container">
+    <div class="logo">
+      <h1>🚀 Saarthi</h1>
+      <p>Crypto Futures Trading Platform</p>
+    </div>
+    
+    <div id="alertBox" class="alert hidden"></div>
+    
+    <div class="tabs">
+      <button class="tab active" data-tab="login">Login</button>
+      <button class="tab" data-tab="register">Register</button>
+    </div>
+    
+    <!-- Login Form -->
+    <form id="loginForm" class="form active">
+      <div class="field">
+        <label for="loginEmail">Email</label>
+        <input type="email" id="loginEmail" required placeholder="your@email.com" />
+      </div>
+      
+      <div class="field">
+        <label for="loginPassword">Password</label>
+        <input type="password" id="loginPassword" required placeholder="••••••••" />
+      </div>
+      
+      <button type="submit" class="btn btn-primary">Login</button>
+    </form>
+    
+    <!-- Register Form -->
+    <form id="registerForm" class="form">
+      <div class="field">
+        <label for="registerEmail">Email</label>
+        <input type="email" id="registerEmail" required placeholder="your@email.com" />
+      </div>
+      
+      <div class="field">
+        <label for="registerUsername">Username</label>
+        <input type="text" id="registerUsername" required placeholder="username" minlength="3" />
+      </div>
+      
+      <div class="field">
+        <label for="registerFullName">Full Name (Optional)</label>
+        <input type="text" id="registerFullName" placeholder="John Doe" />
+      </div>
+      
+      <div class="field">
+        <label for="registerPassword">Password</label>
+        <input type="password" id="registerPassword" required placeholder="••••••••" minlength="8" />
+      </div>
+      
+      <div class="field">
+        <label for="registerConfirmPassword">Confirm Password</label>
+        <input type="password" id="registerConfirmPassword" required placeholder="••••••••" minlength="8" />
+      </div>
+      
+      <button type="submit" class="btn btn-primary">Create Account</button>
+    </form>
+    
+    <div class="footer">
+      Protected by JWT authentication
+    </div>
+  </div>
+  
+  <script>
+    const API_URL = 'http://localhost:8000/api';
+    
+    // Tab switching
+    document.querySelectorAll('.tab').forEach(tab => {
+      tab.addEventListener('click', () => {
+        const targetTab = tab.dataset.tab;
+        
+        // Update tabs
+        document.querySelectorAll('.tab').forEach(t => t.classList.remove('active'));
+        tab.classList.add('active');
+        
+        // Update forms
+        document.querySelectorAll('.form').forEach(f => f.classList.remove('active'));
+        document.getElementById(targetTab + 'Form').classList.add('active');
+        
+        // Clear alert
+        hideAlert();
+      });
+    });
+    
+    // Alert functions
+    function showAlert(message, type = 'error') {
+      const alertBox = document.getElementById('alertBox');
+      alertBox.textContent = message;
+      alertBox.className = `alert alert-${type}`;
+      alertBox.classList.remove('hidden');
+    }
+    
+    function hideAlert() {
+      document.getElementById('alertBox').classList.add('hidden');
+    }
+    
+    // Save tokens
+    function saveTokens(accessToken, refreshToken, user) {
+      localStorage.setItem('access_token', accessToken);
+      localStorage.setItem('refresh_token', refreshToken);
+      localStorage.setItem('user', JSON.stringify(user));
+    }
+    
+    // Login handler
+    document.getElementById('loginForm').addEventListener('submit', async (e) => {
+      e.preventDefault();
+      hideAlert();
+      
+      const email = document.getElementById('loginEmail').value;
+      const password = document.getElementById('loginPassword').value;
+      const btn = e.target.querySelector('.btn');
+      
+      btn.disabled = true;
+      btn.textContent = 'Logging in...';
+      
+      try {
+        const response = await fetch(`${API_URL}/auth/login`, {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({ email, password })
+        });
+        
+        const data = await response.json();
+        
+        if (!response.ok) {
+          throw new Error(data.detail || 'Login failed');
+        }
+        
+        // Save tokens and redirect
+        saveTokens(data.access_token, data.refresh_token, data.user);
+        showAlert('Login successful! Redirecting...', 'success');
+        
+        setTimeout(() => {
+          window.location.href = '/index.html';
+        }, 1000);
+        
+      } catch (error) {
+        showAlert(error.message, 'error');
+        btn.disabled = false;
+        btn.textContent = 'Login';
+      }
+    });
+    
+    // Register handler
+    document.getElementById('registerForm').addEventListener('submit', async (e) => {
+      e.preventDefault();
+      hideAlert();
+      
+      const email = document.getElementById('registerEmail').value;
+      const username = document.getElementById('registerUsername').value;
+      const fullName = document.getElementById('registerFullName').value;
+      const password = document.getElementById('registerPassword').value;
+      const confirmPassword = document.getElementById('registerConfirmPassword').value;
+      const btn = e.target.querySelector('.btn');
+      
+      // Validate passwords match
+      if (password !== confirmPassword) {
+        showAlert('Passwords do not match', 'error');
+        return;
+      }
+      
+      btn.disabled = true;
+      btn.textContent = 'Creating account...';
+      
+      try {
+        const response = await fetch(`${API_URL}/auth/register`, {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({
+            email,
+            username,
+            password,
+            full_name: fullName || null
+          })
+        });
+        
+        const data = await response.json();
+        
+        if (!response.ok) {
+          throw new Error(data.detail || 'Registration failed');
+        }
+        
+        // Save tokens and redirect
+        saveTokens(data.access_token, data.refresh_token, data.user);
+        showAlert('Account created successfully! Redirecting...', 'success');
+        
+        setTimeout(() => {
+          window.location.href = '/index.html';
+        }, 1000);
+        
+      } catch (error) {
+        showAlert(error.message, 'error');
+        btn.disabled = false;
+        btn.textContent = 'Create Account';
+      }
+    });
+    
+    // Check if already logged in
+    const accessToken = localStorage.getItem('access_token');
+    if (accessToken) {
+      window.location.href = '/index.html';
+    }
+  </script>
+</body>
+</html>
